@@ -251,6 +251,7 @@ AC.prototype.mount = function mount() {
   /* AZ (Viz) 7/18/2016: Make sure to scrollIntoView before positioning the search field,
      otherwise creates a visible gap between the search field and results in the
      sidebar menu on mobile safari. */
+  // TODO: there are some problems in mobile chrome
   var doMount = function() {
     // REM: self inherited from containing scope
     if (!self.el) {
@@ -356,7 +357,9 @@ AC.prototype.keydown = function keydown(e) {
     case AC.KEYCODE.ENTER:
       if (self.selectedIndex > -1) {
         self.trigger(e);
-        e.preventDefault();  // Make sure search isn't automatically triggered after selection.
+        e.preventDefault();
+        // Make sure search isn't automatically triggered after selection.
+        // Current intention: user could auto-complete the series and then add more search terms (such as manga/dvds)
       }
       break;
     case AC.KEYCODE.ESC:
@@ -366,7 +369,7 @@ AC.prototype.keydown = function keydown(e) {
       // (Need to focus synchronously otherwise doesn't work on mobile safari)
       //this.inputEl.blur();
       //this.unmount();
-      var listStyle = window.getComputedStyle(self.el);
+      var listStyle = window.getComputedStyle(self.el);  // NOTE: getComputedStyle gets everything inherited as well
       if (self.results.length && listStyle.display !== 'none') {
         self.el.style.display = 'none';
         self.selectedIndex    = -1;
@@ -480,6 +483,7 @@ AC.prototype.click = function click(e) {
 
 // Added by AZ (Viz) 7/19/2016.
 // @see http://stackoverflow.com/a/13358390
+// NOTE: converted to NOT use jquery
 AC.prototype.tap = function tap(e) {
   var self = this;
 
@@ -659,6 +663,12 @@ AC.createMatchTextEls = function match(input, complete) {
   input = input ? input.trim() : '';
   len   = input.length;
   index = len ? complete.toLowerCase().indexOf(input.toLowerCase()) : -1;
+
+  // TODO: This need to be enhanced to properly handle special characters like smart quotes or é, Ô, ä, names like Yu-Gi-Oh (yugi)
+  //       。, ♥, ★, ・
+  // weird behavior:  search for "emon", matches a bunch of "Demon"
+  //                  delete the "n", now pokemon shows up (unbolded)
+  //                  same with "eld", finds zelda and eyeshield, add "l" (nothing), delete "l" finds eldlive
 
   if (index === 0) {
     fragment.appendChild(AC.createEl('b', null, complete.substring(0, len)));
